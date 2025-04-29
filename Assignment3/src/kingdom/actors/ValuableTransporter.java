@@ -1,6 +1,8 @@
 package kingdom.actors;
 
 import kingdom.deposit.Deposit;
+import kingdom.treasureroom.TreasureRoom;
+import kingdom.treasureroom.TreasureRoomDoor;
 import kingdom.utils.Logger;
 import kingdom.valuables.Valuable;
 
@@ -17,9 +19,10 @@ public class ValuableTransporter implements Runnable
   private final Random random;
   private final Logger logger;
   private volatile boolean running;
+  private final TreasureRoomDoor treasureRoomDoor;
 
   public ValuableTransporter(String name, Deposit deposit, int minTargetValue, int maxTargetValue,
-      int transportInterval)
+      int transportInterval, TreasureRoomDoor treasureRoomDoor)
   {
     this.name = name;
     this.deposit = deposit;
@@ -29,6 +32,7 @@ public class ValuableTransporter implements Runnable
     this.random = new Random();
     this.logger = Logger.getInstance();
     this.running = true;
+    this.treasureRoomDoor = treasureRoomDoor;
   }
 
   @Override public void run()
@@ -52,9 +56,15 @@ public class ValuableTransporter implements Runnable
           totalValue += valuable.getValue();
         }
         logger.logAction(name, "COLLECTED", valuables.size() + " items with total value " + totalValue);
-        // For now, just "throw away" the valuables as per requirements
-        // In future implementations, these will be transported to the TreasureRoom
-        logger.logAction(name, "DISPOSING", "Throwing away collected valuables"); // to be changed
+
+        // transporting to the TreasureRoom
+        logger.logAction(name, "DISPOSING", "Transporting valuables to TreasureRoom");
+        TreasureRoom treasureRoom = treasureRoomDoor.acquireWriteAccess();
+        for (Valuable valuable: valuables){
+          treasureRoom.addValuable(valuable);
+        }
+        treasureRoomDoor.releaseWriteAccess();
+        logger.logAction(name,"DELIVERED", "Successfully delivered valuables to TreasureRoom");
         valuables.clear();
         // Sleep for transport interval
         Thread.sleep(transportInterval);

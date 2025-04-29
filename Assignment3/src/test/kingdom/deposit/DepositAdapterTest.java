@@ -3,6 +3,8 @@ package test.kingdom.deposit;
 import kingdom.actors.ValuableMiner;
 import kingdom.actors.ValuableTransporter;
 import kingdom.deposit.Deposit;
+import kingdom.treasureroom.TreasureRoom;
+import kingdom.treasureroom.TreasureRoomGuardsman;
 import kingdom.utils.Logger;
 
 import java.util.ArrayList;
@@ -24,12 +26,18 @@ public class DepositAdapterTest
     miners.add(new ValuableMiner("Miner-1", deposit, 10, 50, 1000)); // Values 10-50, mines every ~1 second
     miners.add(new ValuableMiner("Miner-2", deposit, 20, 40, 1500)); // Values 20-40, mines every ~1.5 seconds
 
+    //Create TreasureRoom so valuables have a destination
+    TreasureRoom treasureRoom = new TreasureRoom();
+
+    //Create Guardsman controls access to TreasureRoom
+    TreasureRoomGuardsman guardsman = new TreasureRoomGuardsman(treasureRoom);
+
     // Create transporters (consumers)
     List<ValuableTransporter> transporters = new ArrayList<>();
     transporters.add(
-        new ValuableTransporter("Transporter-1", deposit, 50, 100, 3000)); // Goal 50-100, transports every ~3 seconds
+        new ValuableTransporter("Transporter-1", deposit, 50, 100, 3000,guardsman)); // Goal 50-100, transports every ~3 seconds
     transporters.add(
-        new ValuableTransporter("Transporter-2", deposit, 80, 150, 5000)); // Goal 80-150, transports every ~5 seconds
+        new ValuableTransporter("Transporter-2", deposit, 80, 150, 5000,guardsman)); // Goal 80-150, transports every ~5 seconds
 
     // Create and start miner threads
     List<Thread> minerThreads = new ArrayList<>();
